@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#102a2b" />
+  <title>Radiador Pro | Gestão de oficina</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="print.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#dashboard" aria-label="Radiador Pro início">
+        <span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6v20M13 6v20M19 6v20M25 6v20M4 11h24M4 21h24"/></svg></span>
+        <span><strong>radiador<span>pro</span></strong><small>GESTÃO DE OFICINA</small></span>
+      </a>
+      <div class="workspace-label">ESPAÇO DE TRABALHO</div>
+      <nav class="nav-list" aria-label="Navegação principal">
+        <a href="#dashboard" class="nav-link active" data-page="dashboard"><span class="nav-icon">⌂</span><span>Visão geral</span></a>
+        <a href="#estoque" class="nav-link" data-page="estoque"><span class="nav-icon">▦</span><span>Estoque</span><span class="nav-badge" id="lowBadge">0</span></a>
+        <a href="#movimentacoes" class="nav-link" data-page="movimentacoes"><span class="nav-icon">⇄</span><span>Movimentações</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-caption">ATENDIMENTO</div>
+        <a href="#ordens" class="nav-link" data-page="ordens"><span class="nav-icon">▤</span><span>Ordens de serviço</span></a>
+        <a href="#orcamentos" class="nav-link" data-page="orcamentos"><span class="nav-icon">▧</span><span>Orçamentos</span></a>
+        <a href="#veiculos" class="nav-link" data-page="veiculos"><span class="nav-icon">▱</span><span>Veículos</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="help-card"><div class="help-icon">✦</div><strong>Um dia de cada vez.</strong><p>Organize sua oficina e ganhe tempo para o que importa.</p></div>
+        <button class="profile" id="profileBtn"><span class="avatar">RP</span><span class="profile-copy"><strong>Oficina demonstração</strong><small>Plano de demonstração</small></span><span class="more">···</span></button>
+      </div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar"><button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="crumb"><span>Oficina</span><b>/</b><strong id="pageTitle">Visão geral</strong></div><div class="top-actions"><span class="today" id="todayLabel"></span><button class="icon-button" id="notificationBtn" aria-label="Notificações">♧<i class="notification-dot"></i></button><span class="top-avatar">RP</span></div></header>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+  <div class="modal-backdrop" id="modalBackdrop" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-header"><div><div class="eyebrow" id="modalEyebrow">NOVO REGISTRO</div><h2 id="modalTitle">Adicionar</h2></div><button class="close-button" id="modalClose" aria-label="Fechar">×</button></div><div id="modalBody"></div></section></div>
+  <script src="app.js"></script>
+</body>
+</html>
