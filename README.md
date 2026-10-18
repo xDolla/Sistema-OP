@@ -12,14 +12,15 @@ Para explorar a demonstração local, abra `index.html` em um navegador atualiza
 
 ## Publicar atualizações no GitHub
 
-Abra o PowerShell na pasta do projeto e configure seu nome e o e-mail associado à sua conta GitHub (o e-mail `noreply` do GitHub também pode ser usado):
+Este workspace tem uma cópia portátil do Git em `.git-tools/portable`, ignorada pelo repositório. O script `publicar.ps1` usa essa cópia automaticamente. Em um novo clone ou computador, instale o [Git for Windows](https://git-scm.com/download/win). No PowerShell, na pasta do projeto, configure seu nome e o e-mail associado à sua conta GitHub (o endereço `noreply` do GitHub também pode ser usado):
 
 ```powershell
-git config user.name "Seu nome"
-git config user.email "seu-email-do-GitHub"
+$git = Join-Path $PWD '.git-tools\portable\cmd\git.exe'
+& $git config user.name "Seu nome"
+& $git config user.email "seu-email-do-GitHub"
 ```
 
-O remoto `origin` deste projeto aponta para `https://github.com/xDolla/Sistema-OP.git`, na branch `main`. No primeiro `git push`, o Git Credential Manager solicitará autenticação pelo navegador. Para publicar mudanças depois, execute:
+O remoto `origin` deste projeto aponta para `https://github.com/xDolla/Sistema-OP.git`, na branch `main`. O Git Credential Manager cuida da autenticação segura. Para publicar mudanças depois, execute:
 
 ```powershell
 .\publicar.ps1 "Descreva as alterações"

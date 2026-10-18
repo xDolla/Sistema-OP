@@ -30,7 +30,7 @@ $Raiz = (& $GitExecutavel -C $Repositorio rev-parse --show-toplevel 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $Raiz) { throw 'Esta pasta não está dentro de um repositório Git válido.' }
 $Nome = (& $GitExecutavel -C $Repositorio config user.name 2>$null)
 $Email = (& $GitExecutavel -C $Repositorio config user.email 2>$null)
-if ($LASTEXITCODE -ne 0 -or -not $Nome -or -not $Email -or $Email -eq 'codex@localhost') { throw "Configure sua identidade Git com git config user.name 'Seu nome' e git config user.email 'seu-email-do-GitHub'." }
+if ($LASTEXITCODE -ne 0 -or -not $Nome -or -not $Email -or $Email -eq 'codex@localhost') { throw 'Configure seu nome e e-mail Git seguindo a seção Publicar atualizações no GitHub do README.md.' }
 $Remoto = (& $GitExecutavel -C $Repositorio remote get-url origin 2>$null)
 if ($LASTEXITCODE -ne 0 -or -not $Remoto) { throw 'O remoto origin não está configurado. Confira a seção Git no README.md.' }
 $Branch = (& $GitExecutavel -C $Repositorio branch --show-current)
