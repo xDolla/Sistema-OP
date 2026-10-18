@@ -16,7 +16,8 @@ if (-not (Test-Path -LiteralPath $GitExecutavel)) {
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Argumentos)
     if (Test-Path -LiteralPath $GerenciadorCredenciais) {
-        & $GitExecutavel -c credential.helper= -c "credential.helper=$GerenciadorCredenciais" -C $Repositorio @Argumentos
+        $ComandoCredenciais = '!"' + ($GerenciadorCredenciais -replace '\\', '/') + '"'
+        & $GitExecutavel -c credential.helper= -c "credential.helper=$ComandoCredenciais" -C $Repositorio @Argumentos
     } else {
         & $GitExecutavel -C $Repositorio @Argumentos
     }
