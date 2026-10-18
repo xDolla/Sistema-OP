@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#102a2b" />
+  <title>Administração | Radiador Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin-portal.css" />
+</head>
+<body class="admin-portal">
+  <section id="loginScreen" class="admin-login"><form id="loginForm"><div class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6v20M13 6v20M19 6v20M25 6v20M4 11h24M4 21h24"/></svg></span><span><strong>radiador<span>pro</span></strong><small>ACESSO ADMINISTRATIVO</small></span></div><div class="eyebrow">ÁREA RESTRITA</div><h1>Entrar na administração</h1><p>Acesse para gerenciar usuários, assinaturas e recebimentos.</p><label class="form-field"><span>E-mail administrativo</span><input name="email" type="email" autocomplete="username" required></label><label class="form-field"><span>Senha</span><input name="password" type="password" autocomplete="current-password" required></label><p id="loginError" class="login-error" role="alert"></p><button class="btn btn-primary" type="submit">Entrar com segurança</button></form></section>
+  <div class="app-shell" id="adminShell" hidden>
+    <aside class="sidebar">
+      <a class="brand" href="admin.html"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6v20M13 6v20M19 6v20M25 6v20M4 11h24M4 21h24"/></svg></span><span><strong>radiador<span>pro</span></strong><small>ADMINISTRAÇÃO</small></span></a>
+      <div class="workspace-label">PAINEL ADMINISTRATIVO</div>
+      <nav class="nav-list" aria-label="Administração">
+        <a href="#dashboard" class="nav-link active" data-page="dashboard"><span class="nav-icon">◫</span><span>Resumo</span></a>
+        <a href="#clientes" class="nav-link" data-page="clientes"><span class="nav-icon">♙</span><span>Usuários e clientes</span></a>
+        <a href="#pagamentos" class="nav-link" data-page="pagamentos"><span class="nav-icon">＄</span><span>Pagamentos</span><span class="nav-badge" id="pendingBadge">0</span></a>
+        <a href="#cobrancas" class="nav-link" data-page="cobrancas"><span class="nav-icon">♧</span><span>Cobranças</span></a>
+      </nav>
+      <div class="sidebar-bottom"></div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar"><div class="crumb"><span>Radiador Pro</span><b>/</b><strong id="pageTitle">Resumo administrativo</strong></div><div class="top-actions"><span class="today" id="todayLabel"></span><span id="adminEmail" class="admin-email"></span><a class="btn btn-light btn-sm" href="support-admin.html">Chamados</a><button class="btn btn-light btn-sm" id="logoutButton">Sair</button></div></header>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+  <dialog id="adminDialog" class="admin-dialog"><form id="adminForm" method="dialog"><div class="modal-header"><div><div class="eyebrow" id="dialogEyebrow">ADMINISTRAÇÃO</div><h2 id="dialogTitle">Editar cadastro</h2></div><button class="close-button" value="cancel" aria-label="Fechar">×</button></div><div id="dialogBody"></div><div class="dialog-actions"><button class="btn btn-light" value="cancel">Cancelar</button><button class="btn btn-primary" id="saveButton" value="save">Salvar</button></div></form></dialog>
+  <script src="admin-portal.js"></script>
+</body>
+</html>

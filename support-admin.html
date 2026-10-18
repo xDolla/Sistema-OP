@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#102a2b" />
+  <title>Portal de suporte | Radiador Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin-portal.css" />
+  <link rel="stylesheet" href="support-admin.css" />
+</head>
+<body class="support-admin-page admin-portal">
+  <section id="loginScreen" class="admin-login"><form id="loginForm"><div class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6v20M13 6v20M19 6v20M25 6v20M4 11h24M4 21h24"/></svg></span><span><strong>radiador<span>pro</span></strong><small>PORTAL DE SUPORTE</small></span></div><div class="eyebrow">ACESSO RESTRITO</div><h1>Entrar no suporte</h1><p>Faça login para atender os chamados dos clientes.</p><label class="form-field"><span>E-mail administrativo</span><input name="email" type="email" autocomplete="username" required></label><label class="form-field"><span>Senha</span><input name="password" type="password" autocomplete="current-password" required></label><p id="loginError" class="login-error" role="alert"></p><button class="btn btn-primary" type="submit">Entrar</button></form></section>
+  <div id="supportShell" class="app-shell" hidden>
+    <aside class="sidebar"><a class="brand" href="support-admin.html"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6v20M13 6v20M19 6v20M25 6v20M4 11h24M4 21h24"/></svg></span><span><strong>radiador<span>pro</span></strong><small>SUPORTE</small></span></a><div class="workspace-label">ATENDIMENTO</div><nav class="nav-list"><a href="#abertos" class="nav-link active" data-filter="open"><span class="nav-icon">●</span><span>Abertos</span><span class="nav-badge" id="openBadge">0</span></a><a href="#todos" class="nav-link" data-filter="all"><span class="nav-icon">▤</span><span>Todos os chamados</span></a><a href="admin.html" class="nav-link"><span class="nav-icon">←</span><span>Administração</span></a></nav></aside>
+    <main class="main-area"><header class="topbar"><div class="crumb"><span>Radiador Pro</span><b>/</b><strong>Portal de suporte</strong></div><div class="top-actions"><span id="staffEmail" class="admin-email"></span><button class="btn btn-light btn-sm" id="logoutButton">Sair</button></div></header><div class="content" id="supportContent"></div></main>
+  </div>
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+  <script src="support-admin.js"></script>
+</body>
+</html>

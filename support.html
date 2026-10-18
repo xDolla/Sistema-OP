@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#102a2b" />
+  <title>Ajuda e suporte | Radiador Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="support.css" />
+</head>
+<body class="support-page">
+  <header class="support-top"><a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 6v20M13 6v20M19 6v20M25 6v20M4 11h24M4 21h24"/></svg></span><span><strong>radiador<span>pro</span></strong><small>AJUDA AO CLIENTE</small></span></a><a href="index.html" class="btn btn-light btn-sm">← Voltar ao sistema</a></header>
+  <main class="support-wrap">
+    <section class="support-intro"><div class="eyebrow">CENTRAL DE AJUDA</div><h1>Como podemos ajudar?</h1><p>Descreva o que aconteceu. Nossa equipe receberá seu chamado e responderá por este portal.</p></section>
+    <div class="support-grid">
+      <section class="support-card"><div class="support-card-head"><span class="support-icon">＋</span><div><h2>Abrir chamado</h2><p>Conte o problema com o máximo de detalhes possível.</p></div></div>
+        <form id="ticketForm" class="support-form">
+          <label>Seu nome<input name="name" required minlength="2" maxlength="120" autocomplete="name"></label>
+          <label>E-mail para acompanhar a resposta<input name="email" type="email" required autocomplete="email"></label>
+          <label>Telefone (opcional)<input name="phone" type="tel" maxlength="40" autocomplete="tel"></label>
+          <label>Categoria<select name="category"><option>Problema técnico</option><option>Acesso à conta</option><option>Pagamentos</option><option>Dúvida de uso</option><option>Outro</option></select></label>
+          <label>Assunto<input name="subject" required minlength="4" maxlength="160" placeholder="Ex.: não consigo salvar uma ordem"></label>
+          <label class="support-full">Descreva o problema<textarea name="message" required minlength="20" maxlength="5000" rows="6" placeholder="O que você estava fazendo? O que aconteceu? Alguma mensagem de erro apareceu?"></textarea><small>Mínimo de 20 caracteres.</small></label>
+          <p id="ticketError" class="support-error" role="alert"></p><button class="btn btn-primary" type="submit">Enviar chamado</button>
+        </form>
+        <section id="ticketCreated" class="ticket-created" hidden aria-live="polite"></section>
+      </section>
+      <section class="support-card tracking-card"><div class="support-card-head"><span class="support-icon">⌕</span><div><h2>Acompanhar chamado</h2><p>Informe o código recebido e o mesmo e-mail usado na abertura.</p></div></div>
+        <form id="trackingForm" class="support-form"><label>Código do chamado<input name="id" required placeholder="SUP-..."></label><label>E-mail<input name="email" type="email" required></label><p id="trackingError" class="support-error" role="alert"></p><button class="btn btn-light" type="submit">Consultar andamento</button></form>
+        <div id="ticketStatus" class="ticket-status" hidden></div>
+      </section>
+    </div>
+    <p class="support-privacy">Seus dados serão usados somente para responder a este chamado. Não envie senhas nem dados de cartão.</p>
+  </main>
+  <script src="support-client.js"></script>
+</body>
+</html>

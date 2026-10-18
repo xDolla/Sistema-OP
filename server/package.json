@@ -1,0 +1,11 @@
+{
+  "name": "radiador-pro-admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend seguro para administração do Radiador Pro",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test ../tests/*.test.cjs"
+  },
+  "engines": { "node": ">=20" }
+}

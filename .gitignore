@@ -1,0 +1,16 @@
+# Segredos locais
+.env
+.env.*
+!.env.example
+server/.env
+server/data/
+
+# Dependências e arquivos gerados
+.git-tools/
+node_modules/
+server/node_modules/
+npm-debug.log*
+*.log
+coverage/
+Thumbs.db
+.DS_Store

@@ -7,10 +7,12 @@ const vm = require('node:vm');
 function bootApp() {
   const storage = new Map();
   const elements = {
-    '#content': { innerHTML: '', listeners: {}, addEventListener(name, callback) { this.listeners[name] = callback; } },
+    '#content': { innerHTML: '', listeners: {}, addEventListener(name, callback) { (this.listeners[name] ||= []).push(callback); } },
     '#todayLabel': { textContent: '' },
     '#pageTitle': { textContent: '' },
     '#lowBadge': { textContent: '', style: {} },
+    '#billingBadge': { textContent: '', style: {} },
+    '#notificationDot': { style: {} },
     '#sidebar': { classList: { remove() {}, toggle() {} } },
     '#modalBackdrop': { hidden: true },
     '#modalTitle': { textContent: '' },
@@ -29,7 +31,7 @@ function bootApp() {
     querySelectorAll: () => [],
     createElement: () => ({ className: '', textContent: '', remove() {} })
   };
-  const elementsClick = (action, id) => elements['#content'].listeners.click({ target: { closest: () => ({ dataset: { action, id } }) } });
+  const elementsClick = (action, id) => elements['#content'].listeners.click.forEach(callback => callback({ target: { closest: () => ({ dataset: { action, id } }) } }));
   const context = {
     document, location: { hash: '' },
     localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
@@ -37,8 +39,10 @@ function bootApp() {
     globalThis: null, elementsClick
   };
   context.globalThis = context;
+  const adminSource = fs.readFileSync(path.join(__dirname, '..', 'admin-pages.js'), 'utf8');
+  vm.runInNewContext(adminSource, context, { filename: 'admin-pages.js' });
   let source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  source = source.replace('  render();\n})();', '  render();\n  globalThis.__testApi = { db, lowParts, addMovement, recordMovement, createOrder, createBudget, getPart, saveState, budgetTotal, setPage, click: (action,id) => elementsClick(action,id), showPrint };\n})();');
+  source = source.replace('  render();\n})();', '  render();\n  globalThis.__testApi = { db, lowParts, addMovement, recordMovement, createOrder, createBudget, getPart, saveState, budgetTotal, setPage, click: (action,id) => elementsClick(action,id), showPrint, clientHealth, billingClients, saveAdminClient, registerSubscriptionPayment, createBillingNotice, dayDistance };\n})();');
   vm.runInNewContext(source, context, { filename: 'app.js' });
   return { api: context.__testApi, storage, content: elements['#content'], modal: elements['#modalBackdrop'], modalTitle: elements['#modalTitle'], modalBody: elements['#modalBody'] };
 }
@@ -188,4 +192,64 @@ test('simulação de uma jornada de oficina: recebimento, atendimentos, orçamen
   assert.equal(saved.parts.find(item => item.id === part.id).stock, 9);
   assert.ok(saved.orders.some(order => order.id === newOrders[0].id));
   assert.ok(saved.budgets.some(budget => budget.id === newBudgets[0].id));
+});
+
+test('administração carrega clientes e os estados de assinatura para alertas', () => {
+  const { api } = bootApp();
+  assert.equal(api.db.clients.length, 8);
+  assert.equal(api.db.payments.length, 5);
+  assert.ok(api.db.clients.every(client => client.permissions && Object.keys(client.permissions).length === 8));
+  assert.equal(api.clientHealth(api.db.clients.find(c => c.id === 'CLI-0005')), 'Em atraso');
+  assert.ok(api.billingClients().some(client => client.id === 'CLI-0002'));
+});
+
+test('a área administrativa não está disponível na navegação do sistema da oficina', () => {
+  const { api, content } = bootApp();
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(index, /href="support\.html"/);
+  assert.doesNotMatch(index, /href="admin\.html"/);
+  assert.doesNotMatch(index, /data-page="clientes"|data-page="assinaturas"|data-page="cobrancas"/);
+  api.setPage('clientes');
+  assert.match(content.innerHTML, /Movimentação de peças/);
+  api.setPage('assinaturas');
+  assert.match(content.innerHTML, /Movimentação de peças/);
+  api.setPage('cobrancas');
+  assert.match(content.innerHTML, /Movimentação de peças/);
+});
+
+test('admin consegue cadastrar cliente com permissões específicas e rejeitar e-mail duplicado', () => {
+  const { api } = bootApp();
+  const newClient = api.saveAdminClient({ business: 'Radiadores Teste', owner: 'Joana Silva', email: 'joana@teste.example', phone: '11999990000', plan: 'Essencial', price: 89, cycle: 'Mensal', dueDate: '2026-11-20', startedAt: '2026-10-18', subscriptionStatus: 'Ativa', perm_dashboard: 'on', perm_stock: 'on', perm_orders: 'on' });
+  assert.ok(newClient);
+  assert.equal(newClient.permissions.stock, true);
+  assert.equal(newClient.permissions.budgets, false);
+  assert.equal(api.db.clients.length, 9);
+  const duplicate = api.saveAdminClient({ business: 'Duplicado', owner: 'Outra pessoa', email: 'joana@teste.example', plan: 'Pro', price: 149, cycle: 'Mensal', dueDate: '2026-11-20', subscriptionStatus: 'Ativa' });
+  assert.equal(duplicate, false);
+  assert.equal(api.db.clients.length, 9);
+});
+
+test('registrar pagamento atualiza o histórico, reativa a assinatura e avança o vencimento', () => {
+  const { api, storage } = bootApp();
+  const client = api.db.clients.find(c => c.id === 'CLI-0005');
+  const beforeCount = api.db.payments.length;
+  assert.equal(api.clientHealth(client), 'Em atraso');
+  assert.equal(api.registerSubscriptionPayment({ clientId: client.id, amount: 149, date: '2026-10-18', method: 'PIX', reference: 'REC-TEST-01' }), true);
+  assert.equal(api.db.payments.length, beforeCount + 1);
+  assert.equal(client.subscriptionStatus, 'Ativa');
+  assert.equal(client.lastPayment, '2026-10-18');
+  assert.equal(client.dueDate, '2026-11-18');
+  assert.equal(api.clientHealth(client), 'Ativa');
+  assert.ok(JSON.parse(storage.get('radiadorPro.v1')).payments.some(p => p.reference === 'REC-TEST-01'));
+});
+
+test('central registra lembrete local e mantém trilha de cobrança sem enviar mensagem', () => {
+  const { api } = bootApp();
+  const client = api.db.clients.find(c => c.id === 'CLI-0005');
+  const notice = api.createBillingNotice(client.id);
+  assert.equal(notice.clientId, client.id);
+  assert.match(notice.message, /está vencida há/);
+  assert.equal(client.lastReminder, notice.date);
+  api.setPage('cobrancas');
+  assert.match(api.db.billingNotifications[0].message, /Próximo vencimento/);
 });
