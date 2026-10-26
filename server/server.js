@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 
 const COOKIE = 'rp_admin_session';
 const SESSION_MS = 8 * 60 * 60 * 1000;
+const API_VERSION = '1.0.0';
 const PERMISSIONS = ['dashboard', 'stock', 'movements', 'orders', 'budgets', 'vehicles', 'reports', 'exports'];
 const json = (res, status, value, headers = {}) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', ...headers }); res.end(JSON.stringify(value)); };
 
@@ -18,9 +19,10 @@ function hashPassword(password) { return crypto.scryptSync(password, crypto.rand
 function validEmail(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '')); }
 function validDate(value) { if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false; const d = new Date(`${value}T12:00:00Z`); return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value; }
 
-function createService({ dataFile = path.join(__dirname, 'data', 'admin.json'), adminEmail = process.env.ADMIN_EMAIL, adminPassword = process.env.ADMIN_PASSWORD, webhookSecret = process.env.PAYMENT_WEBHOOK_SECRET, mpAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN, notificationUrl = process.env.PAYMENT_NOTIFICATION_URL, secureCookies = process.env.NODE_ENV === 'production', fetchImpl = globalThis.fetch, now = () => Date.now() } = {}) {
+function createService({ dataFile = path.join(__dirname, 'data', 'admin.json'), adminEmail = process.env.ADMIN_EMAIL, adminPassword = process.env.ADMIN_PASSWORD, webhookSecret = process.env.PAYMENT_WEBHOOK_SECRET, mpAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN, notificationUrl = process.env.PAYMENT_NOTIFICATION_URL, secureCookies = process.env.NODE_ENV === 'production', corsOrigins = process.env.API_CORS_ORIGINS || '', fetchImpl = globalThis.fetch, now = () => Date.now() } = {}) {
   if (!validEmail(adminEmail) || typeof adminPassword !== 'string' || adminPassword.length < 12) throw new Error('Configure ADMIN_EMAIL e ADMIN_PASSWORD (mínimo de 12 caracteres).');
   const sessions = new Map(); const attempts = new Map(); const supportAttempts = new Map();
+  const allowedOrigins = new Set(String(corsOrigins).split(',').map(origin => origin.trim()).filter(Boolean));
   let db;
   try { db = JSON.parse(fs.readFileSync(dataFile, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; db = { clients: [], payments: [], billingNotifications: [], processedEvents: [], tickets: [] }; }
   db.clients ||= []; db.payments ||= []; db.billingNotifications ||= []; db.processedEvents ||= []; db.tickets ||= [];
@@ -28,7 +30,7 @@ function createService({ dataFile = path.join(__dirname, 'data', 'admin.json'), 
   const cookie = (id, maxAge) => `${COOKIE}=${id}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secureCookies ? '; Secure' : ''}`;
   function readBody(req, limit = 1024 * 1024) { return new Promise((resolve, reject) => { let raw = ''; req.on('data', chunk => { raw += chunk; if (raw.length > limit) { reject(Object.assign(new Error('Corpo muito grande.'), { status: 413 })); req.destroy(); } }); req.on('end', () => resolve(raw)); req.on('error', reject); }); }
   async function bodyJson(req) { const raw = await readBody(req); try { return { raw, value: JSON.parse(raw || '{}') }; } catch { throw Object.assign(new Error('JSON inválido.'), { status: 400 }); } }
-  function sessionFor(req) { const id = (req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith(`${COOKIE}=`))?.slice(COOKIE.length + 1); const item = sessions.get(id); if (!item || item.expires < now()) { if (id) sessions.delete(id); return null; } item.expires = now() + SESSION_MS; return { id, item }; }
+  function sessionFor(req) { const bearer = /^Bearer\s+(.+)$/i.exec(String(req.headers.authorization || ''))?.[1]; const id = bearer || (req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith(`${COOKIE}=`))?.slice(COOKIE.length + 1); const item = sessions.get(id); if (!item || item.expires < now()) { if (id) sessions.delete(id); return null; } item.expires = now() + SESSION_MS; return { id, item }; }
   function requireAdmin(req, res) { const session = sessionFor(req); if (!session) { json(res, 401, { error: 'Faça login para continuar.' }); return null; } return session; }
   function clientInput(value, existing = {}) {
     const email = String(value.email || '').trim().toLowerCase(); const business = String(value.business || '').trim();
@@ -49,6 +51,29 @@ function createService({ dataFile = path.join(__dirname, 'data', 'admin.json'), 
     res.setHeader('x-frame-options', 'DENY'); res.setHeader('referrer-policy', 'same-origin'); res.setHeader('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:");
     const url = new URL(req.url, 'http://localhost');
     try {
+      if (url.pathname.startsWith('/api/v1/')) url.pathname = url.pathname.replace(/^\/api\/v1\//, '/api/');
+      const origin = req.headers.origin;
+      if (origin && allowedOrigins.has(origin)) {
+        res.setHeader('access-control-allow-origin', origin);
+        res.setHeader('vary', 'Origin');
+        res.setHeader('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.setHeader('access-control-allow-headers', 'Authorization, Content-Type');
+        res.setHeader('access-control-max-age', '600');
+      }
+      if (req.method === 'OPTIONS' && url.pathname.startsWith('/api/')) return res.writeHead(204).end();
+      if (req.method === 'GET' && url.pathname === '/api/health') return json(res, 200, { status: 'ok', apiVersion: API_VERSION });
+      if (req.method === 'GET' && url.pathname === '/api/openapi.json') {
+        const spec = JSON.parse(fs.readFileSync(path.join(__dirname, 'openapi.json'), 'utf8'));
+        return json(res, 200, spec, { 'cache-control': 'public, max-age=300' });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/auth/login') {
+        const ip = req.socket.remoteAddress || 'unknown'; const attempt = attempts.get(ip) || { count: 0, until: 0 }; if (attempt.until > now()) return json(res, 429, { error: 'Muitas tentativas. Tente novamente mais tarde.' });
+        const { value } = await bodyJson(req); const ok = safeEqual(String(value.email || '').trim().toLowerCase(), adminEmail.toLowerCase()) && safeEqual(String(value.password || ''), adminPassword);
+        if (!ok) { attempt.count++; if (attempt.count >= 8) { attempt.count = 0; attempt.until = now() + 15 * 60 * 1000; } attempts.set(ip, attempt); return json(res, 401, { error: 'E-mail ou senha incorretos.' }); }
+        attempts.delete(ip); const accessToken = crypto.randomBytes(32).toString('base64url'); sessions.set(accessToken, { email: adminEmail, expires: now() + SESSION_MS }); return json(res, 200, { accessToken, tokenType: 'Bearer', expiresIn: SESSION_MS / 1000, user: { email: adminEmail, role: 'admin' } });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/auth/me') { const s = requireAdmin(req, res); return s && json(res, 200, { email: s.item.email, role: 'admin' }); }
+      if (req.method === 'POST' && url.pathname === '/api/auth/logout') { const s = sessionFor(req); if (s) sessions.delete(s.id); return json(res, 200, { ok: true }); }
       if (req.method === 'GET' && url.pathname === '/api/admin/me') { const s = requireAdmin(req, res); return s && json(res, 200, { email: s.item.email }); }
       if (req.method === 'POST' && url.pathname === '/api/admin/login') {
         const ip = req.socket.remoteAddress || 'unknown'; const attempt = attempts.get(ip) || { count: 0, until: 0 }; if (attempt.until > now()) return json(res, 429, { error: 'Muitas tentativas. Tente novamente mais tarde.' });

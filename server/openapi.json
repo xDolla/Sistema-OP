@@ -1,0 +1,38 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Radiador Pro API",
+    "version": "1.0.0",
+    "description": "API REST Node.js para os portais existentes. Os endpoints administrativos aceitam sessão web ou token Bearer para clientes mobile. A autenticação de oficinas e os dados operacionais do sistema ainda serão adicionados em uma etapa seguinte."
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "tags": [
+    { "name": "Sistema" },
+    { "name": "Autenticação" },
+    { "name": "Administração" },
+    { "name": "Suporte" },
+    { "name": "Pagamentos" }
+  ],
+  "paths": {
+    "/health": { "get": { "tags": ["Sistema"], "summary": "Verifica disponibilidade da API", "responses": { "200": { "description": "API operacional" } } } },
+    "/openapi.json": { "get": { "tags": ["Sistema"], "summary": "Obtém este contrato OpenAPI", "responses": { "200": { "description": "Contrato OpenAPI" } } } },
+    "/auth/login": { "post": { "tags": ["Autenticação"], "summary": "Autentica a conta administrativa para cliente mobile", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["email", "password"], "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string", "format": "password" } } } } } }, "responses": { "200": { "description": "Token Bearer e perfil administrativo" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "429": { "description": "Limite de tentativas excedido" } } } },
+    "/auth/me": { "get": { "tags": ["Autenticação"], "security": [{ "bearerAuth": [] }], "summary": "Retorna a conta autenticada", "responses": { "200": { "description": "Perfil autenticado" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/auth/logout": { "post": { "tags": ["Autenticação"], "security": [{ "bearerAuth": [] }], "summary": "Encerra a sessão", "responses": { "200": { "description": "Sessão encerrada" } } } },
+    "/admin/me": { "get": { "tags": ["Administração"], "security": [{ "bearerAuth": [] }], "summary": "Compatibilidade com sessão do portal web", "responses": { "200": { "description": "Perfil administrativo" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/admin/data": { "get": { "tags": ["Administração"], "security": [{ "bearerAuth": [] }], "summary": "Lista clientes e pagamentos administrativos", "responses": { "200": { "description": "Dados administrativos" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/admin/clients": { "post": { "tags": ["Administração"], "security": [{ "bearerAuth": [] }], "summary": "Cadastra uma oficina cliente", "responses": { "201": { "description": "Cliente cadastrado" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/admin/clients/{id}": { "parameters": [{ "$ref": "#/components/parameters/Id" }], "put": { "tags": ["Administração"], "security": [{ "bearerAuth": [] }], "summary": "Atualiza uma oficina cliente", "responses": { "200": { "description": "Cliente atualizado" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "404": { "description": "Cliente não encontrado" } } }, "delete": { "tags": ["Administração"], "security": [{ "bearerAuth": [] }], "summary": "Remove uma oficina cliente", "responses": { "204": { "description": "Cliente removido" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/admin/clients/{id}/checkout": { "parameters": [{ "$ref": "#/components/parameters/Id" }], "post": { "tags": ["Pagamentos"], "security": [{ "bearerAuth": [] }], "summary": "Gera link de pagamento Checkout Pro", "responses": { "201": { "description": "Link de pagamento" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/admin/payments": { "post": { "tags": ["Pagamentos"], "security": [{ "bearerAuth": [] }], "summary": "Registra pagamento manual", "responses": { "201": { "description": "Pagamento registrado" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/admin/support/tickets": { "get": { "tags": ["Suporte"], "security": [{ "bearerAuth": [] }], "summary": "Lista chamados para a equipe", "responses": { "200": { "description": "Fila de chamados" }, "401": { "$ref": "#/components/responses/Unauthorized" } } } },
+    "/support/tickets": { "post": { "tags": ["Suporte"], "summary": "Abre chamado de suporte", "responses": { "201": { "description": "Chamado aberto" }, "400": { "description": "Dados inválidos" } } } },
+    "/support/tickets/{id}": { "parameters": [{ "$ref": "#/components/parameters/Id" }, { "name": "email", "in": "query", "required": true, "schema": { "type": "string", "format": "email" } }], "get": { "tags": ["Suporte"], "summary": "Consulta chamado com código e e-mail", "responses": { "200": { "description": "Chamado e conversa" }, "404": { "description": "Chamado não encontrado" } } } },
+    "/payments/mercadopago/webhook": { "post": { "tags": ["Pagamentos"], "summary": "Notificação de pagamento do Mercado Pago", "responses": { "200": { "description": "Notificação processada ou ignorada" }, "401": { "description": "Assinatura inválida" } } } }
+  },
+  "components": {
+    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "opaque" } },
+    "parameters": { "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } },
+    "responses": { "Unauthorized": { "description": "Autenticação necessária" } }
+  }
+}

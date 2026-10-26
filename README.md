@@ -43,6 +43,16 @@ O script prepara e registra as alterações e envia a branch atual. Arquivos `.e
 
 O portal em `admin.html` usa um backend Node.js independente com sessão administrativa, gestão de clientes e permissões, histórico de recebimentos e cobranças. A API e os dados administrativos ficam no servidor em `server/data/admin.json`; a senha e as credenciais do gateway são fornecidas por variáveis de ambiente, nunca pelo navegador.
 
+### API Node.js para web e mobile
+
+O backend oferece uma API REST versionada em `/api/v1`, implementada com módulos nativos do Node.js e sem dependências externas. O contrato OpenAPI fica disponível em `/api/v1/openapi.json`; `/api/v1/health` verifica a disponibilidade. As rotas atuais de administração, pagamentos e suporte também respondem sob `/api/v1` e preservam as rotas antigas para compatibilidade com os portais existentes.
+
+Aplicativos nativos podem autenticar a conta administrativa com `POST /api/v1/auth/login`, enviando `email` e `password` em JSON. A resposta contém um token Bearer temporário; envie-o como `Authorization: Bearer <accessToken>` nas chamadas protegidas. O token vale por até 8 horas e pode ser revogado com `POST /api/v1/auth/logout`. O login administrativo é para administração do produto, não para contas das oficinas clientes.
+
+Para um frontend web servido em outra origem, configure `API_CORS_ORIGINS` como uma lista separada por vírgulas de origens exatas, por exemplo `https://app.exemplo.com,https://painel.exemplo.com`. CORS não substitui autenticação. Não use `*` em produção.
+
+Esta etapa prepara o contrato e o acesso mobile ao backend administrativo já existente. O sistema operacional das oficinas ainda usa armazenamento local no navegador e ainda não existe login de cliente, isolamento por oficina ou API de estoque/ordens/orçamentos. Esses recursos devem ser modelados e migrados antes de o app mobile atender os usuários finais. O armazenamento atual segue em JSON; a camada de persistência será substituída por banco de dados numa etapa posterior.
+
 ### Iniciar localmente
 
 Instale Node.js 20 ou mais recente. No PowerShell, configure as credenciais e inicie o servidor:
